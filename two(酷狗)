@@ -1,0 +1,69 @@
+#coding:utf-8
+
+import requests
+import os
+import mp3play
+#导入音乐播放库
+import pyglet
+headers={
+    'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3141.7 Safari/537.36'
+}
+name=raw_input(u"输入歌名")
+url='http://songsearch.kugou.com/song_search_v2?keyword={}'.format(name)
+req=requests.get(url,headers)
+json1=req.json()
+print(req.json())
+json2=json1['data']['lists']
+print(u"%s"%json2)
+json3=json2[0]['FileHash']
+print(json3,type(json3))
+#请求的下载url
+url2='http://www.kugou.com/yy/index.php?r=play/getdata&hash={}'.format(json3)
+req=requests.get(url2,headers)
+json1=req.json()['data']['play_url']
+print(json1)
+def Mkdir(dirname):
+    pathdir=os.path.join('C:\\',dirname)
+    if not os.path.exists(pathdir):
+        os.mkdir(pathdir)
+    return pathdir
+def downmp3(url,dirpath,imgname):
+    filename=os.path.join(dirpath,imgname)
+    try:
+        res=requests.get(url,headers, timeout=15)
+        print(res.status_code)
+        if str(res.status_code)[0]=="4":
+            print(str(res.status_code), ":" , url)
+            return False
+    except Exception() as e:
+        print(u"抛出异常%s" %url)
+        print(e)
+        return False
+    with open(filename, "wb") as f:
+        f.write(res.content)
+    return True
+pathdir=Mkdir(u"kugou")
+if(downmp3(json1,pathdir,name.decode('utf-8')+".mp3")):
+    print(u"下载成功")
+mp3name=name.decode('utf-8')+".mp3"
+print(u"播放%s"%mp3name)
+filepath='C:\\kugou\\%s'%mp3name
+pyglet.lib.load_library('avbin')
+pyglet.hava_avbin = True
+window = pyglet.window.Window()
+# 加载音频文件，并播放
+source = pyglet.media.load(filepath)
+source.play()
+pyglet.app.run()
+print(filepath)
+
+
+
+
+# source=pyglet.media.load(filepath)
+# player=pyglet.media.Player()
+# player.queue(source)
+# player.play()
+# print(filepath)
+# mp3=mp3play.load(filepath)
+# mp3.play()
